@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -18,8 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class GermanStatistic extends Statistic {
+public class GermanStatistic {
 
     @Id
     @GeneratedValue
@@ -30,4 +28,13 @@ public class GermanStatistic extends Statistic {
     private Double solvingSpeed;
     private Level level;
     private LocalDateTime playTimestamp;
+
+    public GermanStatistic(Statistic statistic) {
+        this.deviceId = statistic.getDeviceId();
+        this.category = statistic.getCategory();
+        this.percentageCorrect = statistic.getPercentageCorrect();
+        this.solvingSpeed = statistic.getSolvingSpeed();
+        this.level = statistic.getLevel();
+        this.playTimestamp = statistic.getPlayTimestamp();
+    }
 }

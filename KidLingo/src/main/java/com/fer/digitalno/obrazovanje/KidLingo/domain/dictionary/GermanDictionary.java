@@ -7,7 +7,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -15,8 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class GermanDictionary extends Dictionary {
+public class GermanDictionary {
 
     @Id
     @GeneratedValue
@@ -24,6 +22,4 @@ public class GermanDictionary extends Dictionary {
     private String wordEnglish;
     private String word;
     private Category category;
-    private Long noGuess;
-    private Long noPicked;
 }
