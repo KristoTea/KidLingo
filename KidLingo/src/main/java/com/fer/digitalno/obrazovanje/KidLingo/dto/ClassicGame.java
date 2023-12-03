@@ -7,5 +7,5 @@ import lombok.Builder;
 @Builder
 public record ClassicGame(@NotBlank String wordEnglish,
                           @NotBlank String word,
-                          @Nullable byte[] picture) {
+                          String imageUrl) {
 }

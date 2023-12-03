@@ -11,5 +11,5 @@ import java.util.List;
 public record ElectionGame(@NotBlank String wordEnglish,
                            @NotBlank String word,
                            @NotEmpty List<String> wrongWords,
-                           @Nullable byte[] picture) {
+                           String pictureUrl) {
 }

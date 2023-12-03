@@ -1,29 +1,21 @@
 package com.fer.digitalno.obrazovanje.KidLingo.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
 @Table(name = "generated_picture")
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class GeneratedPicture {
 
     @Id
-    @GeneratedValue()
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String word;
 
-    private String type;
-
-    private byte[] imageData;
+    private String imageUrl;
 }

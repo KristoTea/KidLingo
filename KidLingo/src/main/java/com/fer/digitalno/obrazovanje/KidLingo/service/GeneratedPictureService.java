@@ -6,6 +6,5 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface GeneratedPictureService {
 
-    void savePicture(MultipartFile picture);
-    byte[] getPictureByWord(String word);
+    void savePictureUrl(String word, String pictureUrl);
 }
