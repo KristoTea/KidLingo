@@ -7,7 +7,7 @@ import lombok.*;
 @Getter
 @Entity
 @Builder
-@Table(name = "english_dictionary")
+@Table(name = "dictionary")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Dictionary {

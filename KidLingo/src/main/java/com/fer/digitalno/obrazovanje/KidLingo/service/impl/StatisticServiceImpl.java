@@ -1,45 +1,123 @@
 package com.fer.digitalno.obrazovanje.KidLingo.service.impl;
 
-import com.fer.digitalno.obrazovanje.KidLingo.dao.statistic.EnglishStatisticRepository;
-import com.fer.digitalno.obrazovanje.KidLingo.dao.statistic.FrenchStatisticRepository;
-import com.fer.digitalno.obrazovanje.KidLingo.dao.statistic.GermanStatisticRepository;
-import com.fer.digitalno.obrazovanje.KidLingo.dao.statistic.ItalianStatisticRepository;
-import com.fer.digitalno.obrazovanje.KidLingo.domain.statistic.*;
+import com.fer.digitalno.obrazovanje.KidLingo.dao.StatisticRepository;
+import com.fer.digitalno.obrazovanje.KidLingo.domain.Statistic;
 import com.fer.digitalno.obrazovanje.KidLingo.dto.GameStatistic;
+import com.fer.digitalno.obrazovanje.KidLingo.dto.StatisticByDevice;
+import com.fer.digitalno.obrazovanje.KidLingo.dto.statistic.*;
 import com.fer.digitalno.obrazovanje.KidLingo.service.StatisticService;
+import com.fer.digitalno.obrazovanje.KidLingo.utils.Category;
 import com.fer.digitalno.obrazovanje.KidLingo.utils.Language;
-import lombok.AllArgsConstructor;
+import com.fer.digitalno.obrazovanje.KidLingo.utils.Level;
+import com.fer.digitalno.obrazovanje.KidLingo.utils.StatisticType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class StatisticServiceImpl implements StatisticService {
 
-    private EnglishStatisticRepository englishStatisticRepository;
-    private FrenchStatisticRepository frenchStatisticRepository;
-    private GermanStatisticRepository germanStatisticRepository;
-    private ItalianStatisticRepository italianStatisticRepository;
+    private final StatisticRepository statisticRepository;
 
     @Override
-    public void saveGameData(Language language, GameStatistic gameStatistic) {
-        Statistic statistic = mapToStatistic(gameStatistic);
-        switch (language) {
-            case ENGLISH -> englishStatisticRepository.save(new EnglishStatistic(statistic));
-            case FRENCH -> frenchStatisticRepository.save(new FrenchStatistic(statistic));
-            case GERMAN -> germanStatisticRepository.save(new GermanStatistic(statistic));
-            case ITALIAN -> italianStatisticRepository.save(new ItalianStatistic(statistic));
-            default -> throw new IllegalArgumentException("Unknown language");
-        }
+    public void saveGameStatistic(GameStatistic gameStatistic) {
+        statisticRepository.save(mapToStatistic(gameStatistic));
     }
 
-    private static Statistic mapToStatistic(GameStatistic gameStatistic) {
+    @Override
+    public StatisticByDevice getStatisticByDevice(String deviceId) {
+        StatisticByLanguage englishStatistic = getStatisticByLanguage(Language.ENGLISH);
+        StatisticByLanguage frenchStatistic = getStatisticByLanguage(Language.FRENCH);
+        StatisticByLanguage germanStatistic = getStatisticByLanguage(Language.GERMAN);
+        StatisticByLanguage italianStatistic = getStatisticByLanguage(Language.ITALIAN);
+
+        return new StatisticByDevice(englishStatistic, frenchStatistic,
+                germanStatistic, italianStatistic);
+    }
+
+    private StatisticByLanguage getStatisticByLanguage(Language language) {
+        CorrectAnswers averageCorrectAnswers = getAverageCorrectAnswers(language);
+        SolvingSpeed averageSolvingSpeed = getAverageSolvingSpeed(language);
+        List<ProgressStatistic> progressStatistic = getProgressStatistic(language);
+
+        return new StatisticByLanguage(averageCorrectAnswers,
+                                        averageSolvingSpeed,
+                                        progressStatistic);
+    }
+
+    private CorrectAnswers getAverageCorrectAnswers(Language language) {
+        AverageScoreByLevel elected = getAverageScoreByLevel(language, Level.ELECTED, StatisticType.CORRECT_ANSWERS);
+        AverageScoreByLevel typed = getAverageScoreByLevel(language, Level.TYPED, StatisticType.CORRECT_ANSWERS);
+        AverageScoreByLevel written = getAverageScoreByLevel(language, Level.WRITTEN, StatisticType.CORRECT_ANSWERS);
+
+        return new CorrectAnswers(elected, typed, written);
+    }
+
+    private SolvingSpeed getAverageSolvingSpeed(Language language) {
+        AverageScoreByLevel elected = getAverageScoreByLevel(language, Level.ELECTED, StatisticType.SOLVING_SPEED);
+        AverageScoreByLevel typed = getAverageScoreByLevel(language, Level.TYPED, StatisticType.SOLVING_SPEED);
+        AverageScoreByLevel written = getAverageScoreByLevel(language, Level.WRITTEN, StatisticType.SOLVING_SPEED);
+
+        return new SolvingSpeed(elected, typed, written);
+    }
+
+    private AverageScoreByLevel getAverageScoreByLevel(Language language,
+                                                       Level level,
+                                                       StatisticType statisticType) {
+
+        Double colors = getAverageScoreByLanguageAndLevelAndCategory(language,level, Category.COLORS, statisticType);
+        Double animals = getAverageScoreByLanguageAndLevelAndCategory(language,level, Category.ANIMALS, statisticType);
+        Double food = getAverageScoreByLanguageAndLevelAndCategory(language,level, Category.FOOD, statisticType);
+        Double objects = getAverageScoreByLanguageAndLevelAndCategory(language,level, Category.OBJECTS, statisticType);
+
+        return new AverageScoreByLevel(colors, animals, food, objects);
+    }
+
+    private Double getAverageScoreByLanguageAndLevelAndCategory(Language language,
+                                                                Level level,
+                                                                Category category,
+                                                                StatisticType statisticType) {
+        Double averageScore = 0.0;
+        if(statisticType.equals(StatisticType.CORRECT_ANSWERS)) {
+            List<Integer> scores = statisticRepository
+                    .findAllNumberOfCorrectAnswersByLanguageAndLevelAndCategory(language.name(), level.name(), category.name());
+            if(!scores.isEmpty()) {
+                averageScore = (double) (scores.stream().reduce(0, Integer::sum) / scores.size());
+            }
+        }
+
+        if(statisticType.equals(StatisticType.SOLVING_SPEED)) {
+            List<Double> scores = statisticRepository
+                    .findAllSolvingSpeedByLanguageAndLevelAndCategory(language.name(), level.name(), category.name());
+            if(!scores.isEmpty()) {
+                averageScore = scores.stream().reduce(0.0, Double::sum) / scores.size();
+            }
+        }
+
+        return averageScore;
+    }
+
+    private List<ProgressStatistic> getProgressStatistic(Language language) {
+        List<Statistic> statistics = statisticRepository.findAllByLanguageOrderByPlayTimestamp(language.name());
+        return statistics
+                .stream()
+                .map(statistic -> new ProgressStatistic(statistic.getPlayTimestamp(),
+                                                        statistic.getNumberOfCorrectAnswers(),
+                                                        Level.valueOf(statistic.getLevel()),
+                                                        Category.valueOf(statistic.getCategory())))
+                .toList();
+    }
+
+    private Statistic mapToStatistic(GameStatistic gameStatistic) {
         return new Statistic(gameStatistic.deviceId(),
-                             gameStatistic.category(),
-                             gameStatistic.percentageCorrect(),
-                             gameStatistic.solvingSpeed(),
-                             gameStatistic.level(),
-                             LocalDateTime.now());
+                gameStatistic.language().name(),
+                gameStatistic.level().name(),
+                gameStatistic.category().name(),
+                gameStatistic.numberOfCorrectAnswers(),
+                gameStatistic.solvingSpeed(),
+                LocalDateTime.now());
     }
 }
