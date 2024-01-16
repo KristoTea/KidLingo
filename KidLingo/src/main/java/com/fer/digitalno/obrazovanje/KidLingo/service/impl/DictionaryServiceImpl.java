@@ -20,6 +20,9 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class DictionaryServiceImpl implements DictionaryService {
 
+    private static final int NUM_OF_WRONG_WORDS = 3;
+    private static final int NUM_OF_GAMES_IN_GAMESET = 5;
+
     private final DictionaryRepository dictionaryRepository;
 
     private final GeneratedPictureRepository generatedPictureRepository;
@@ -28,7 +31,7 @@ public class DictionaryServiceImpl implements DictionaryService {
     public List<ClassicGame> getClassicGameSet(Language language, Category category) {
         List<ClassicGame> classicGames = new ArrayList<>();
 
-        for(Dictionary dictionaryRow : getGameSet(language, category)) {
+        for(Dictionary dictionaryRow : getGameSet(category)) {
             classicGames.add(createClassicGame(dictionaryRow, language));
         }
 
@@ -39,7 +42,7 @@ public class DictionaryServiceImpl implements DictionaryService {
     public List<ElectionGame> getGameWithElectionCandidates(Language language, Category category) {
         List<ElectionGame> electionGames = new ArrayList<>();
 
-        for(Dictionary dictionaryRow : getGameSet(language, category)) {
+        for(Dictionary dictionaryRow : getGameSet(category)) {
             electionGames.add(createElectionGame(dictionaryRow, language, category));
         }
 
@@ -74,9 +77,9 @@ public class DictionaryServiceImpl implements DictionaryService {
                 .build();
     }
 
-    private List<Dictionary> getGameSet(Language language, Category category) {
+    private List<Dictionary> getGameSet(Category category) {
         List<Dictionary> dictionaryList = dictionaryRepository.findByCategory(category.name().toLowerCase());
-        return getNRandomValues(dictionaryList, 5);
+        return getNRandomValues(dictionaryList, NUM_OF_GAMES_IN_GAMESET);
     }
 
     private List<String> getWrongWords(Language language, Category category, String word) {
@@ -84,17 +87,23 @@ public class DictionaryServiceImpl implements DictionaryService {
                 .stream()
                 .map(dictionary -> dictionary.getWord(language))
                 .toList();
-        return getNRandomValues(wordsInRequestedLanguage, 3);
+        return getNRandomValues(wordsInRequestedLanguage, NUM_OF_WRONG_WORDS);
     }
 
     private <T> List<T> getNRandomValues(List<T> values, int numOfRandomValues) {
-        // TODO make sure to not choose same values multiple times
+
         Random random = new Random();
         List<T> randomValues = new ArrayList<>();
 
         for (int i = 0; i < numOfRandomValues; i++) {
             int randomIndex = random.nextInt(values.size());
             T randomValue = values.get(randomIndex);
+
+            if(randomValues.contains(randomValue)) {
+                i--;
+                continue;
+            }
+
             randomValues.add(randomValue);
         }
 
