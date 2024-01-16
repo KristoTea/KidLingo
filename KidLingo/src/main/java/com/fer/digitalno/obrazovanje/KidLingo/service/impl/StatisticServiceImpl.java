@@ -13,6 +13,7 @@ import com.fer.digitalno.obrazovanje.KidLingo.utils.StatisticType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -51,17 +52,15 @@ public class StatisticServiceImpl implements StatisticService {
     private CorrectAnswers getAverageCorrectAnswers(Language language) {
         AverageScoreByLevel elected = getAverageScoreByLevel(language, Level.ELECTED, StatisticType.CORRECT_ANSWERS);
         AverageScoreByLevel typed = getAverageScoreByLevel(language, Level.TYPED, StatisticType.CORRECT_ANSWERS);
-        AverageScoreByLevel written = getAverageScoreByLevel(language, Level.WRITTEN, StatisticType.CORRECT_ANSWERS);
 
-        return new CorrectAnswers(elected, typed, written);
+        return new CorrectAnswers(elected, typed);
     }
 
     private SolvingSpeed getAverageSolvingSpeed(Language language) {
         AverageScoreByLevel elected = getAverageScoreByLevel(language, Level.ELECTED, StatisticType.SOLVING_SPEED);
         AverageScoreByLevel typed = getAverageScoreByLevel(language, Level.TYPED, StatisticType.SOLVING_SPEED);
-        AverageScoreByLevel written = getAverageScoreByLevel(language, Level.WRITTEN, StatisticType.SOLVING_SPEED);
 
-        return new SolvingSpeed(elected, typed, written);
+        return new SolvingSpeed(elected, typed);
     }
 
     private AverageScoreByLevel getAverageScoreByLevel(Language language,
@@ -85,7 +84,7 @@ public class StatisticServiceImpl implements StatisticService {
             List<Integer> scores = statisticRepository
                     .findAllNumberOfCorrectAnswersByLanguageAndLevelAndCategory(language.name(), level.name(), category.name());
             if(!scores.isEmpty()) {
-                averageScore = (double) (scores.stream().reduce(0, Integer::sum) / scores.size());
+                averageScore = (double) (scores.stream().reduce(0, Integer::sum)) / scores.size();
             }
         }
 
